@@ -1,98 +1,126 @@
 package main
 
-// Пишите тесты в этом файле
 import (
-	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateRandomElements(t *testing.T) {
 
-	data, err := generateRandomElements(10)
-
-	if err != nil {
-		t.Fatalf("ошибка генерации 10 элементов: %v", err)
+	tests := []struct {
+		name    string
+		size    int
+		wantLen int
+		wantNil bool
+	}{
+		{
+			name:    "valid size",
+			size:    10,
+			wantLen: 10,
+			wantNil: false,
+		},
+		{
+			name:    "zero size",
+			size:    0,
+			wantNil: true,
+		},
+		{
+			name:    "negative size",
+			size:    -5,
+			wantNil: true,
+		},
 	}
 
-	if len(data) != 10 {
-		t.Fatalf("Ожидалась длина 10, получено %d", len(data))
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			data := generateRandomElements(tt.size)
+
+			if tt.wantNil {
+				require.Nil(t, data)
+				return
+			}
+
+			require.NotNil(t, data)
+			require.Len(t, data, tt.wantLen)
+		})
 	}
-}
-
-func TestGenerateRandomElementsError(t *testing.T) {
-
-	_, err := generateRandomElements(0)
-
-	if err == nil {
-		t.Fatalf("Ожидалась ошибка, но получено значение nil")
-	}
-}
-
-func TestMaxChunksLessThanChunks(t *testing.T) {
-
-	data := []int{1, 5, 3}
-
-	_, err := maxChunks(data)
-	if err == nil {
-		t.Fatalf("ожидалась ошибка при len(data) < CHUNKS: %v", err)
-	}
-
 }
 
 func TestMaximum(t *testing.T) {
 
-	data := []int{1, 5, 3, 9, 2, 11, 66, 77, 88}
-
-	max, err := maximum(data)
-
-	if err != nil {
-		t.Fatalf("неожиданная ошибка поиска max: %v", err)
+	tests := []struct {
+		name string
+		data []int
+		want int
+	}{
+		{
+			name: "normal slice",
+			data: []int{1, 5, 3, 9, 2, 11, 66, 77, 88},
+			want: 88,
+		},
+		{
+			name: "single element",
+			data: []int{42},
+			want: 42,
+		},
+		{
+			name: "negative numbers",
+			data: []int{-10, -3, -7, -1},
+			want: -1,
+		},
 	}
 
-	if max != 88 {
-		t.Fatalf("Ожидалось 88, получено: %d", max)
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			result := maximum(tt.data)
+
+			require.Equal(t, tt.want, result)
+		})
 	}
 }
-func TestMaximumEmptySlice(t *testing.T) {
 
-	_, err := maximum([]int{})
-
-	if err == nil {
-		t.Fatalf("Ожидалась ошибка, но получено значение nil")
-	}
-}
 func TestMaxChunks(t *testing.T) {
 
-	data := []int{1, 5, 3, 9, 2, 11, 4, 99, 22, 11}
-
-	expected := slices.Max(data)
-
-	result, err := maxChunks(data)
-	if err != nil {
-		t.Fatalf("неожиданная ошибка поиска maxChunks: %v", err)
+	tests := []struct {
+		name string
+		data []int
+	}{
+		{
+			name: "small slice",
+			data: []int{1, 5, 3, 9, 2, 11, 4, 99, 22, 11},
+		},
+		{
+			name: "larger slice",
+			data: []int{5, 12, 3, 44, 7, 19, 100, 2, 55, 78, 34, 90},
+		},
 	}
-	if result != expected {
-		t.Fatalf("Ожидалось %d, получено %d", expected, result)
+
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			expected := maximum(tt.data)
+
+			result := maxChunks(tt.data)
+
+			require.Equal(t, expected, result)
+		})
 	}
 }
+
 func TestMaxChunksLarge(t *testing.T) {
 
-	data, err := generateRandomElements(10000)
+	data := generateRandomElements(10000)
+	require.NotNil(t, data)
 
-	if err != nil {
-		t.Fatalf("ошибка генерации 10000 элементов: %v", err)
-	}
+	expected := maximum(data)
 
-	expected, err := maximum(data)
-	if err != nil {
-		t.Fatalf("неожиданная ошибка поиска max: %v", err)
-	}
-	result, err := maxChunks(data)
-	if err != nil {
-		t.Fatalf("неожиданная ошибка поиска maxChunks: %v", err)
-	}
+	result := maxChunks(data)
 
-	if result != expected {
-		t.Fatalf("Ожидалось %d, получено %d", expected, result)
-	}
+	require.Equal(t, expected, result)
 }
